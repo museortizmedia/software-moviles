@@ -1,24 +1,10 @@
-# Challenge 1
-- Se instaló react en JS y se sumó Tailwind
+# Challenge 2
+- Se trabajó sobre el challenge01
 
-## Orden de carpetas
-- src/
-- - components/
-- - - ContactCard.jsx
-- - - CommonInput.jsx
-- - - CommonButton.jsx
-- - - ContactCard.jsx
-- - - FullScreenLoader.jsx
-- - pages/
-- - - PageContactsList.jsx
-- - - PageContactsCreator.jsx
-- - services/
-- - - indexedDB.js
-- - main.jsx
-- - style.css : with Tailwind
+## Cambios
+- Se añaden el manifiest
+- Se modifica el service worker para funcionar con las estrategias y se sube.
+- Se activa en el main
 
-## Ejecución
-- El main controla el loader, también tiene el botón que abre el creator y el list.
-- Creator tiene modo creación o  edicion, segun si currentContact es null o no, esto ayuda a editar
-- List encapsula la logica de filtro y muestra Card
-- Card meustra el cotnacto, tiene botón crear y editar, edicar cambia el estado del currentContact y el eliminar usa el servicio de base de datos para eliminar y refrescar.
+## Como instalar
+Para instalar primero hay que asegurar que la ultima versió nesté en linea, luego abrir desde un navegador del celular, abrir opciones del navegador e instalar en el celular.
