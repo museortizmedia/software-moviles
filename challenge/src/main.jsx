@@ -15,7 +15,7 @@ function App() {
   };
 
   const [isOpen, SetIsOpen] = useState(false);
-  const [currentContact, setCurrentContact] = useState({});
+  const [currentContact, setCurrentContact] = useState(null);
 
   const handleEdit = (form) =>
   {
@@ -47,7 +47,7 @@ function App() {
           + Nuevo Contacto
         </CommonButton>
       </div>
-      <PageContactsCreator isOpen={isOpen} SetIsOpen={SetIsOpen} currentContact={currentContact} onContactCreated={refresh} onContactEdited={refresh} />
+      <PageContactsCreator isOpen={isOpen} SetIsOpen={SetIsOpen} currentContact={currentContact} setCurrentContact={setCurrentContact} onContactCreated={refresh} onContactEdited={refresh} />
       <PageContactsList ref={listRef} handleEdit={handleEdit} />
     </div>
     </>

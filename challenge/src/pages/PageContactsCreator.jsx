@@ -3,7 +3,7 @@ import CommonInput from "../components/CommonInput";
 import CommonButton from "../components/CommonButton";
 import { addContact, updateContact } from "../services/indexedDB";
 
-export default function PageContactsCreator({ isOpen, SetIsOpen, currentContact, onContactCreated, onContactEdited }) {
+export default function PageContactsCreator({ isOpen, SetIsOpen, currentContact, setCurrentContact, onContactCreated, onContactEdited }) {
   const emptyForm = {
     id: null,
     name: "",
@@ -44,6 +44,7 @@ export default function PageContactsCreator({ isOpen, SetIsOpen, currentContact,
     if (isEditing) {
       await updateContact(form);
       onContactEdited?.();
+      setCurrentContact(null);
     } else {
       await addContact(form);
       onContactCreated?.();
@@ -56,7 +57,6 @@ export default function PageContactsCreator({ isOpen, SetIsOpen, currentContact,
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
-
       {/* Overlay */}
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
@@ -162,7 +162,7 @@ export default function PageContactsCreator({ isOpen, SetIsOpen, currentContact,
               type="submit"
               variant={isEditing ? "positive" : "normal"}
             >
-              {isEditing ? "Actualizar" : "Guardar"}
+              {isEditing ? "Actualizar" : "Crear"}
             </CommonButton>
           </div>
 
