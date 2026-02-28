@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   IonModal,
   IonHeader,
@@ -12,49 +12,51 @@ import {
   IonGrid,
   IonRow,
   IonCol,
-  IonAvatar
+  IonAvatar,
+  IonPage,
+  IonIcon
 } from "@ionic/react";
 
-import { addContact, updateContact } from "../services/indexedDB";
+import { addContact, deleteContact, get, updateContact } from "../services/indexedDB";
 import type { Contact } from "../services/indexedDB";
+import { useParams } from "react-router";
+import { trash } from "ionicons/icons";
 
 interface Props {
-  isOpen: boolean;
-  setIsOpen: (value: boolean) => void;
-  currentContact: Contact | null;
-  setCurrentContact: (value: Contact | null) => void;
   onContactCreated?: () => void;
   onContactEdited?: () => void;
 }
 
 const PageContactsCreator: React.FC<Props> = ({
-  isOpen,
-  setIsOpen,
-  currentContact,
-  setCurrentContact,
   onContactCreated,
   onContactEdited
 }) => {
 
   const emptyForm: Contact = {
-  name: "",
-  photo: "",
-  phone: "",
-  email: "",
-  birthday: "",
-};
+    name: "",
+    photo: "",
+    phone: "",
+    email: "",
+    birthday: "",
+  };
 
   const [form, setForm] = useState(emptyForm);
 
-  const isEditing = Boolean(currentContact);
+  const { id } = useParams<{ id: string }>();
 
-  useEffect(() => {
-    if (currentContact) {
-      setForm({ ...currentContact });
-    } else {
-      setForm(emptyForm);
+  const loadContacts = async () => {
+    if (!id) return;
+
+    const data = await get(id);
+
+    if (data) {
+      setForm(data);
     }
-  }, [currentContact, isOpen]);
+  };
+
+  loadContacts();
+
+  const isEditing = Boolean(id);
 
   const handleChange = (field: string, value: any) => {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -62,9 +64,13 @@ const PageContactsCreator: React.FC<Props> = ({
 
   const handleClose = () => {
     setForm(emptyForm);
-    setCurrentContact(null);
-    setIsOpen(false);
+    history.back();
   };
+
+  const handleDelete = () => {
+    deleteContact(Number(id));
+    history.back();
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,7 +89,7 @@ const PageContactsCreator: React.FC<Props> = ({
   };
 
   return (
-    <IonModal isOpen={isOpen} onDidDismiss={handleClose}>
+    <IonPage>
       <IonHeader>
         <IonToolbar>
           <IonTitle>
@@ -93,7 +99,6 @@ const PageContactsCreator: React.FC<Props> = ({
       </IonHeader>
 
       <IonContent className="ion-padding">
-
         <form onSubmit={handleSubmit}>
 
           {/* Avatar + Nombre */}
@@ -191,6 +196,7 @@ const PageContactsCreator: React.FC<Props> = ({
 
           {/* Botones */}
           <div className="ion-text-right ion-padding-top">
+
             <IonButton
               fill="outline"
               onClick={handleClose}
@@ -206,9 +212,22 @@ const PageContactsCreator: React.FC<Props> = ({
             </IonButton>
           </div>
 
+{isEditing && (
+          <IonButton
+            fill="clear"
+              onClick={handleDelete}
+              color={"danger"}
+            >
+              <IonIcon slot="icon-only" icon={trash}></IonIcon>
+              Eliminar
+            </IonButton>
+)}
+
         </form>
+
       </IonContent>
-    </IonModal>
+
+    </IonPage>
   );
 };
 

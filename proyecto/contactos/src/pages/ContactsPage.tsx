@@ -18,7 +18,6 @@ const ContactsPage: React.FC = () => {
 const listRef = useRef<PageContactsListRef>(null);
 
   const refresh = () => {
-    // ⚠️ No usar window.location.reload() en Ionic
     listRef.current?.reload?.();
   };
 
@@ -58,14 +57,14 @@ const listRef = useRef<PageContactsListRef>(null);
             </IonButton>
           </div>
 
-          <PageContactsCreator
+          {/*<PageContactsCreator
             isOpen={isOpen}
             setIsOpen={setIsOpen}
             currentContact={currentContact}
             setCurrentContact={setCurrentContact}
             onContactCreated={refresh}
             onContactEdited={refresh}
-          />
+          />*/}
 
           <PageContactsList
             ref={listRef}

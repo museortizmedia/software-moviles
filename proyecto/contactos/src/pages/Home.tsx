@@ -1,29 +1,30 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useHistory } from "react-router";
 import {
   IonPage,
   IonHeader,
   IonToolbar,
   IonTitle,
   IonContent,
-  IonButton
+  IonButton,
+  IonIcon
 } from "@ionic/react";
 
 import PageContactsList from "./PageContactsList";
 import PageContactsCreator from "./PageContactsCreator";
 import FullScreenLoader from "../components/FullScreenLoader";
 import type { PageContactsListRef } from "./PageContactsList";
+import { logOut } from "ionicons/icons";
 
 const Home: React.FC = () => {
 
   const listRef = useRef<PageContactsListRef>(null);
+  const history = useHistory();
 
-  const [isOpen, setIsOpen] = useState(false);
-  const [currentContact, setCurrentContact] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const handleEdit = (contact: any) => {
-    setCurrentContact(contact);
-    setIsOpen(true);
+    history.push("/form/" + contact.id)
   };
 
   const refresh = () => {
@@ -38,11 +39,25 @@ const Home: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  const moveToCreateContact = (e: any) => {
+    (e.currentTarget as HTMLButtonElement).blur();
+    history.push("/form");
+  }
+
+  const logout = () => {
+    localStorage.removeItem('isLogged');
+    history.replace('/');
+  }
+
+
   return (
     <IonPage>
       <IonHeader>
         <IonToolbar>
           <IonTitle>Gestión de Contactos</IonTitle>
+          <IonButton fill="clear" onClick={logout}>
+            <IonIcon icon={logOut} />
+          </IonButton>
         </IonToolbar>
       </IonHeader>
 
@@ -51,7 +66,7 @@ const Home: React.FC = () => {
         <FullScreenLoader isOpen={isLoading} />
 
         <div className="ion-text-right ion-margin-bottom">
-          <IonButton onClick={() => setIsOpen(true)}>
+          <IonButton onClick={moveToCreateContact}>
             + Nuevo Contacto
           </IonButton>
         </div>
@@ -59,15 +74,6 @@ const Home: React.FC = () => {
         <PageContactsList
           ref={listRef}
           handleEdit={handleEdit}
-        />
-
-        <PageContactsCreator
-          isOpen={isOpen}
-          setIsOpen={setIsOpen}
-          currentContact={currentContact}
-          setCurrentContact={setCurrentContact}
-          onContactCreated={refresh}
-          onContactEdited={refresh}
         />
 
       </IonContent>

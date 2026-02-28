@@ -46,6 +46,25 @@ export async function addContact(contact: Contact): Promise<boolean> {
   });
 }
 
+export async function get(id: number | string): Promise<Contact | undefined> {
+  const db = await openDB();
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const store = tx.objectStore(STORE_NAME);
+
+    const numericId = typeof id === "string" ? Number(id) : id;
+
+    const request = store.get(numericId);
+
+    request.onsuccess = () => {
+      resolve(request.result as Contact | undefined);
+    };
+
+    request.onerror = () => reject(request.error);
+  });
+}
+
 export async function getAllContacts(): Promise<Contact[]> {
   const db = await openDB();
 
