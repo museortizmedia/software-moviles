@@ -1,7 +1,0 @@
-npm i -g @ionic/cli
-
-ionic start project-name
-
-ionic serve
-
-ionic cap run android
