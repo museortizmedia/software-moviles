@@ -14,7 +14,7 @@ import PageContactsList from "./PageContactsList";
 import PageContactsCreator from "./PageContactsCreator";
 import FullScreenLoader from "../components/FullScreenLoader";
 import type { PageContactsListRef } from "./PageContactsList";
-import { logOut } from "ionicons/icons";
+import { LogOut } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 
 const Home: React.FC = () => {
@@ -63,7 +63,7 @@ const Home: React.FC = () => {
         <IonToolbar>
           <IonTitle>Gestión de Contactos</IonTitle>
           <IonButton fill="clear" onClick={handleLogout}>
-            <IonIcon icon={logOut} />
+            <LogOut size={20} />
           </IonButton>
         </IonToolbar>
       </IonHeader>
