@@ -44,6 +44,9 @@ export const useAuth = () => {
     }
   };
 
+  console.log("user:", user);
+console.log("loading:", loading);
+
   return {
     user,
     loading,

@@ -1,77 +1,102 @@
 import {
-  IonPage,
-  IonContent,
-  IonInput,
-  IonButton,
-  IonItem,
-  IonLabel,
-  IonHeader,
-  IonToolbar,
-  IonTitle
+    IonPage,
+    IonContent,
+    IonInput,
+    IonButton,
+    IonItem,
+    IonLabel,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonList
 } from '@ionic/react';
 
 import { useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 const Login: React.FC = () => {
-  const { login, register } = useAuth();
+    const { login, register } = useAuth();
+    const history = useHistory();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
 
-  const handleLogin = async () => {
-    try {
-      await login(email, password);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+    const handleLogin = async () => {
+        try {
+            if (!email || !password) {
+                console.log("Campos vacíos");
+                return;
+            }
 
-  const handleRegister = async () => {
-    try {
-      await register(email, password);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+            await login(email, password);
 
-  return (
-    <IonPage>
-      <IonHeader>
-        <IonToolbar>
-          <IonTitle>Login</IonTitle>
-        </IonToolbar>
-      </IonHeader>
+            console.log("Login correcto");
+            history.replace('/home');
 
-      <IonContent className="ion-padding">
-        <IonItem>
-          <IonLabel position="stacked">Email</IonLabel>
-          <IonInput
-            type="email"
-            value={email}
-            onIonChange={(e: any) => setEmail(e.detail.value!)}
-          />
-        </IonItem>
+        } catch (error: any) {
+            console.error("Error login:", error.message);
+        }
+    };
 
-        <IonItem>
-          <IonLabel position="stacked">Password</IonLabel>
-          <IonInput
-            type="password"
-            value={password}
-            onIonChange={(e: any) => setPassword(e.detail.value!)}
-          />
-        </IonItem>
+    const handleRegister = async () => {
+        try {
+            if (!email || !password) {
+                console.log("Campos vacíos");
+                return;
+            }
 
-        <IonButton expand="block" onClick={handleLogin}>
-          Login
-        </IonButton>
+            await register(email, password);
 
-        <IonButton expand="block" fill="outline" onClick={handleRegister}>
-          Crear cuenta
-        </IonButton>
-      </IonContent>
-    </IonPage>
-  );
+            console.log("Usuario creado");
+            history.replace('/home');
+
+        } catch (error: any) {
+            console.error("Error registro:", error.message);
+        }
+    };
+
+    return (
+        <IonPage>
+            <IonHeader>
+                <IonToolbar>
+                    <IonTitle>Login</IonTitle>
+                </IonToolbar>
+            </IonHeader>
+
+            <IonContent className="ion-padding">
+
+                <IonList>
+                    <IonItem>
+                        <IonLabel position="stacked">Email</IonLabel>
+                        <IonInput
+                            type="email"
+                            value={email}
+                            onIonChange={(e: any) => setEmail(e.detail.value!)}
+                        />
+                    </IonItem>
+
+                    <IonItem>
+                        <IonLabel position="stacked">Password</IonLabel>
+                        <IonInput
+                            type="password"
+                            value={password}
+                            onIonChange={(e: any) => setPassword(e.detail.value!)}
+                        />
+                    </IonItem>
+                </IonList>
+
+                <IonButton expand="block" onClick={handleLogin}>
+                    Login
+                </IonButton>
+
+                <IonButton expand="block" fill="outline" onClick={handleRegister}>
+                    Crear cuenta
+                </IonButton>
+
+            </IonContent>
+        </IonPage>
+    );
 };
 
 export default Login;
