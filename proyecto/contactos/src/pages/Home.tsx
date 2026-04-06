@@ -15,8 +15,11 @@ import PageContactsCreator from "./PageContactsCreator";
 import FullScreenLoader from "../components/FullScreenLoader";
 import type { PageContactsListRef } from "./PageContactsList";
 import { logOut } from "ionicons/icons";
+import { useAuth } from "../hooks/useAuth";
 
 const Home: React.FC = () => {
+
+  const { logout: logoutUser } = useAuth();
 
   const listRef = useRef<PageContactsListRef>(null);
   const history = useHistory();
@@ -44,10 +47,14 @@ const Home: React.FC = () => {
     history.push("/form");
   }
 
-  const logout = () => {
-    localStorage.removeItem('isLogged');
+  const handleLogout = async () => {
+  try {
+    await logoutUser();
     history.replace('/');
+  } catch (error) {
+    console.error("Error logout", error);
   }
+};
 
 
   return (
@@ -55,7 +62,7 @@ const Home: React.FC = () => {
       <IonHeader>
         <IonToolbar>
           <IonTitle>Gestión de Contactos</IonTitle>
-          <IonButton fill="clear" onClick={logout}>
+          <IonButton fill="clear" onClick={handleLogout}>
             <IonIcon icon={logOut} />
           </IonButton>
         </IonToolbar>
