@@ -1,5 +1,6 @@
 import { useApp } from "../contexts/AppContext";
 import { useHistory } from "react-router";
+import { LogOut } from "lucide-react";
 
 export default function TopHeader() {
   const { user } = useApp();
@@ -14,14 +15,11 @@ export default function TopHeader() {
   };
 
   return (
-    <div className="p-4">
+    <div>
 
       <div className="
-      bg-gradient-to-r
-      from-[#071326]
-      to-[#0b1c3a]
       rounded-2xl
-      p-4
+      px-4
       flex
       justify-between
       items-center
@@ -33,11 +31,11 @@ export default function TopHeader() {
 
           <img
             src="https://i.pravatar.cc/100?img=3"
-            className="w-10 h-10 rounded-full"
+            className="w-6 h-6 rounded-full"
           />
 
-          <div>
-            <h2>{username}</h2>
+          <div className="text-xl">
+            <p>{username}</p>
           </div>
 
         </div>
@@ -67,12 +65,9 @@ export default function TopHeader() {
 
           <button
             onClick={handleLogout}
-            className="
-            text-xs
-            text-red-400
-            "
+            className="bg-transparent text-red-400 hover:text-red-400"
           >
-            logout
+            <LogOut size={18} />
           </button>
 
         </div>

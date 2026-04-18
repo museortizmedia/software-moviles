@@ -5,10 +5,10 @@ import {
 import { Redirect } from "react-router-dom";
 
 import PointsHeader from "../components/PointsHeader";
-import ProgressBar from "../components/ProgressBar";
 import MissionCard from "../components/MissionCard";
 import { useApp } from "../contexts/AppContext";
 import TopHeader from "../components/TopHeader";
+import RankingCard from "../components/RankingCard";
 
 export default function Home() {
 
@@ -30,7 +30,7 @@ export default function Home() {
 
           <PointsHeader />
 
-          <ProgressBar />
+          <RankingCard/>
 
           <div className="px-4 space-y-4 mt-4">
 
