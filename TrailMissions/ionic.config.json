@@ -1,0 +1,7 @@
+{
+  "name": "TrailMissions",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react-vite"
+}
