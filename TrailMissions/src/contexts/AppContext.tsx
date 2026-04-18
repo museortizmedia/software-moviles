@@ -1,8 +1,10 @@
 import { createContext, useContext, useState } from "react";
+import { logout } from "../services/firebase/firebase";
 
 const AppContext = createContext<any>(null);
 
 export const AppProvider = ({ children }: any) => {
+  const [user, setUser] = useState(null);
   const [points, setPoints] = useState(0);
 
   const [missions, setMissions] = useState({
@@ -20,12 +22,20 @@ export const AppProvider = ({ children }: any) => {
     setPoints((p) => p + pts);
   };
 
+  const logoutUser = async () => {
+    await logout();
+    setUser(null);
+  };
+
   return (
     <AppContext.Provider
       value={{
+        user,
+        setUser,
         points,
         missions,
-        completeMission
+        completeMission,
+        logoutUser
       }}
     >
       {children}

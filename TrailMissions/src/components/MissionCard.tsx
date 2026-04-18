@@ -1,31 +1,53 @@
-import { IonCard, IonButton } from "@ionic/react";
-
 export default function MissionCard({
-  title,
-  points,
-  completed,
-  onClick
+title,
+points,
+completed,
+onClick
 }: any) {
-  return (
-    <IonCard className="p-4">
-      <div className="flex justify-between">
-        <div>
-          <h2 className="font-semibold">{title}</h2>
-          <p className="text-sm opacity-70">
-            {points} pts
-          </p>
-        </div>
+return (
 
-        {completed ? (
-          <span className="text-green-400">
-            Completed
-          </span>
-        ) : (
-          <IonButton onClick={onClick}>
-            Start
-          </IonButton>
-        )}
-      </div>
-    </IonCard>
-  );
+<div className="
+bg-slate-900
+p-4
+rounded-2xl
+border border-slate-800
+flex
+justify-between
+items-center
+">
+
+<div>
+
+<h3 className="font-semibold">
+{title}
+</h3>
+
+<p className="text-sm text-slate-400">
+{points} pts
+</p>
+
+</div>
+
+{completed ? (
+<div className="text-green-400">
+Completed
+</div>
+) : (
+<button
+onClick={onClick}
+className="
+bg-indigo-600
+px-4
+py-2
+rounded-xl
+text-sm
+"
+>
+Start
+</button>
+)}
+
+</div>
+
+);
 }

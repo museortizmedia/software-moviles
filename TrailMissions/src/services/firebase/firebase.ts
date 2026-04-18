@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth, signInAnonymously } from "firebase/auth";
+import { signOut } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -19,4 +20,8 @@ export const auth = getAuth(app);
 export const loginAnon = async () => {
   const user = await signInAnonymously(auth);
   return user.user.uid;
+};
+
+export const logout = async () => {
+  await signOut(auth);
 };
