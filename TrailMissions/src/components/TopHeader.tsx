@@ -3,11 +3,12 @@ import { useHistory } from "react-router";
 import { LogOut } from "lucide-react";
 
 export default function TopHeader() {
-  const { user } = useApp();
-  const { points, logoutUser } = useApp();
+  const { user, points, logoutUser } = useApp();
   const history = useHistory();
 
-  const username = "USER-" + user?.substring(0,4);
+  if (!user) return null;
+
+  const username = "USER-" + user.substring(0, 4);
 
   const handleLogout = async () => {
     await logoutUser();
@@ -15,42 +16,41 @@ export default function TopHeader() {
   };
 
   return (
-    <div>
+    <div className="px-4 pt-2">
 
       <div className="
-      rounded-2xl
-      px-4
       flex
       justify-between
       items-center
-      shadow-lg
       ">
 
         {/* LEFT */}
         <div className="flex items-center gap-3">
 
           <img
-            src="https://i.pravatar.cc/100?img=3"
-            className="w-6 h-6 rounded-full"
+            src={`https://api.dicebear.com/7.x/identicon/svg?seed=${user}`}
+            className="w-8 h-8 rounded-full bg-slate-800"
           />
 
-          <div className="text-xl">
-            <p>{username}</p>
-          </div>
+          <p className="text-sm font-semibold text-white">
+            {username}
+          </p>
 
         </div>
 
         {/* RIGHT */}
         <div className="flex items-center gap-3">
 
+          {/* POINTS */}
           <div className="
-          bg-slate-700
-          px-4
-          py-2
+          bg-slate-800
+          px-3
+          py-1
           rounded-full
           flex
           items-center
           gap-2
+          text-sm
           ">
 
             <span className="text-yellow-400">
@@ -63,11 +63,25 @@ export default function TopHeader() {
 
           </div>
 
+          {/* LOGOUT */}
           <button
             onClick={handleLogout}
-            className="bg-transparent text-red-400 hover:text-red-400"
+            className="
+            w-9
+            h-9
+            rounded-full
+            flex
+            items-center
+            justify-center
+            bg-slate-800
+            hover:bg-red-500/20
+            transition
+            "
           >
-            <LogOut size={18} />
+            <LogOut
+              size={16}
+              className="text-slate-300"
+            />
           </button>
 
         </div>

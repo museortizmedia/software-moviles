@@ -8,20 +8,11 @@ import TopHeader from "../components/TopHeader";
 import RankingCard from "../components/RankingCard";
 
 import { useApp } from "../contexts/AppContext";
-import { useMissions } from "../hooks/useMissions"; // El hook que creamos
+import { useMissions } from "../hooks/useMissions";
 
 export default function Home() {
   const { user, missions, completeMission } = useApp();
   const [filter, setFilter] = useState<string | null>(null);
-
-  // Importamos las funciones de sensores del hook
-  // Le pasamos la función que ya tienes en tu context para que guarde los puntos al terminar
-  const { takePhotoMission, trackMovement, waitAndVibrate } = useMissions((id) => {
-    const missionData = missionsList.find(m => m.id === id);
-    if (missionData) {
-      completeMission(id, missionData.points);
-    }
-  });
 
   if (!user) {
     return <Redirect to="/login" />;
@@ -30,61 +21,83 @@ export default function Home() {
   const missionsList = [
     { id: "photo", title: "Tomar foto", points: 33 },
     { id: "move", title: "Moverse 50m", points: 33 },
-    { id: "still", title: "Mantente quieto", points: 33 }
+    { id: "still", title: "Mantente quieto", points: 34 }
   ];
 
-  // Esta función decide qué sensor activar según el ID de la card
-  const handleAction = (id: string) => {
-    if (id === "photo") takePhotoMission();
-    if (id === "move") trackMovement();
-    if (id === "still") waitAndVibrate();
-  };
+  const {
+    takePhotoMission,
+    trackMovement,
+    waitAndVibrate
+  } = useMissions(completeMission);
 
   const filtered = filter
     ? missionsList.filter((m) => m.id === filter)
     : missionsList;
 
+  const runMission = (id: string) => {
+    if (id === "photo") takePhotoMission();
+    if (id === "move") trackMovement();
+    if (id === "still") waitAndVibrate();
+  };
+
   return (
     <IonPage>
       <IonContent fullscreen>
         <div className="min-h-screen bg-slate-950 text-white pb-10">
+
           <TopHeader />
           <PointsHeader />
           <RankingCard />
 
+          {/* FILTER */}
           <div className="px-4 mt-6">
+
             <div className="flex justify-between items-center mb-3">
+
               <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-widest">
                 Active Missions
               </h3>
+
               <div className="flex gap-2">
                 {["photo", "move", "still"].map((type) => (
                   <button
                     key={type}
-                    onClick={() => setFilter(filter === type ? null : type)}
-                    className={`px-3 py-1 rounded-full text-xs capitalize transition ${
-                      filter === type ? "bg-indigo-500 text-white" : "bg-slate-800 text-slate-400"
-                    }`}
+                    onClick={() =>
+                      setFilter(filter === type ? null : type)
+                    }
+                    className={`
+                    px-3 py-1 rounded-full text-xs capitalize transition
+                    ${
+                      filter === type
+                        ? "bg-indigo-500 text-white"
+                        : "bg-slate-800 text-slate-400"
+                    }
+                    `}
                   >
                     {type}
                   </button>
                 ))}
               </div>
+
             </div>
           </div>
 
+          {/* MISSIONS */}
           <div className="px-4 space-y-4 mt-4">
+
             {filtered.map((m) => (
               <MissionCard
                 key={m.id}
                 title={m.title}
                 points={m.points}
-                type={m.id} // Se lo pasamos para el icono de Lucide
+                type={m.id}
                 completed={missions[m.id]}
-                onClick={() => handleAction(m.id)} // Cambiamos completeMission por handleAction
+                onClick={() => runMission(m.id)}
               />
             ))}
+
           </div>
+
         </div>
       </IonContent>
     </IonPage>

@@ -16,7 +16,6 @@ export default function MissionCard({
   onClick
 }: MissionCardProps) {
   
-  // Seleccionar icono de Lucide según el "type" (que es el ID de la misión)
   const getIcon = () => {
     switch (type) {
       case 'photo': return <Camera size={40} />;
