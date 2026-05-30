@@ -1,0 +1,108 @@
+SQL
+-- 1. TABLA DE PERFILES
+create table public.profiles (
+  id uuid references auth.users on delete cascade primary key,
+  display_name text,
+  profile_pic text,
+  full_name text,
+  phone text,
+  plan text not null default 'free' check (plan in ('free', 'premium')),
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 2. TABLA DE MASCOTAS
+create table public.pets (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  name text not null,
+  photo text,
+  type text not null check (type in ('perro', 'gato', 'otro')),
+  breed text,
+  birth_month integer check (birth_month between 1 and 12),
+  birth_year integer,
+  weight numeric(5,2),
+  last_vaccination_date date,
+  last_deworming_date date,
+  last_bath_date date,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 3. TABLA DE NOTIFICACIONES
+create table public.notifications (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  pet_id uuid references public.pets(id) on delete cascade not null,
+  title text not null,
+  message text not null,
+  type text check (type in ('vacuna', 'desparasitacion', 'bano')),
+  is_read boolean default false,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 4. TRIGGER: CREAR PERFIL AUTOMÁTICO AL REGISTRARSE
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (id, display_name, profile_pic, full_name, phone, plan)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data->>'name', 'Usuario PetVax'),
+    new.raw_user_meta_data->>'avatar_url',
+    new.raw_user_meta_data->>'full_name',
+    new.phone,
+    'free'
+  );
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
+
+-- 5. TRIGGER: VALIDAR LÍMITE DE MASCOTAS SEGÚN EL PLAN
+create or replace function public.check_pet_limit()
+returns trigger as $$
+declare
+  user_plan text;
+  pet_count integer;
+begin
+  select plan into user_plan from public.profiles where id = new.user_id;
+  select count(*) into pet_count from public.pets where user_id = new.user_id;
+  
+  if user_plan = 'free' and pet_count >= 1 then
+    raise exception 'Plan gratuito limitado a 1 mascota.';
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger enforce_pet_limit
+  before insert on public.pets
+  for each row execute procedure public.check_pet_limit();
+
+-- 6. FUNCIÓN DE RECORDATORIOS DIARIOS
+create or replace function public.generate_daily_reminders()
+returns void as $$
+begin
+  insert into public.notifications (user_id, pet_id, title, message, type)
+  select user_id, id, '¡Hora de su vacuna!', 'Ha pasado 1 año desde la última vacuna de ' || name || '.', 'vacuna'
+  from public.pets where last_vaccination_date = (current_date - interval '1 year');
+
+  insert into public.notifications (user_id, pet_id, title, message, type)
+  select user_id, id, 'Desparasitación pendiente', 'Le corresponde la dosis semestral a ' || name || '.', 'desparasitacion'
+  from public.pets where last_deworming_date = (current_date - interval '6 months');
+
+  insert into public.notifications (user_id, pet_id, title, message, type)
+  select user_id, id, 'Día de Spa 🛁', 'Ha pasado un mes desde el último baño de ' || name || '.', 'bano'
+  from public.pets where last_bath_date = (current_date - interval '1 month');
+end;
+$$ language plpgsql security definer;
+
+
+
+
+
+

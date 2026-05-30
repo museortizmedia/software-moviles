@@ -1,15 +1,19 @@
 // src/pages/Dashboard.tsx
 import React from 'react';
-import { Card } from '../components/Card';
-import { Badge } from '../components/Badge';
-import { PetVaxColors } from '../colors';
+import { Card } from '../../components/Card';
+import { Badge } from '../../components/Badge';
+import { PetVaxColors } from '../../colors';
+import { useAuth } from '../../context/AuthContext';
 
 export const Dashboard: React.FC = () => {
+  const { user } = useAuth();
+  const displayName = user?.isGuest ? 'Invitado' : user?.name ?? user?.email ?? 'Usuario';
+
   return (
     <>
       <div className="space-y-1">
         <h1 className="text-2xl font-bold tracking-tight" style={{ color: PetVaxColors.onSurface }}>
-          Panel Principal
+          Hola, {displayName}
         </h1>
         <p className="text-sm" style={{ color: PetVaxColors.onSurfaceVariant }}>
           Monitoreo y alertas sanitarias en tiempo real.
