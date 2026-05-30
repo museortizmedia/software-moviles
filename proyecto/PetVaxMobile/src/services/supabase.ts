@@ -14,18 +14,22 @@ export interface QueryOptions {
   limit?: number;
 }
 
-const buildQuery = <T = unknown>(table: string, options: QueryOptions) => {
+const buildQuery = <T = unknown>(
+  table: string,
+  options: QueryOptions
+) => {
   const select = options.select ?? '*';
-  let query = supabase.from<T>(table).select(select);
+
+  let query = supabase.from(table).select(select);
 
   if (options.filters) {
     Object.entries(options.filters).forEach(([key, value]) => {
       if (Array.isArray(value)) {
-        query = query.in(key, value as any);
+        query = query.in(key, value as never[]);
       } else if (value === null) {
         query = query.is(key, null);
       } else {
-        query = query.eq(key, value as any);
+        query = query.eq(key, value as never);
       }
     });
   }
@@ -45,19 +49,38 @@ const buildQuery = <T = unknown>(table: string, options: QueryOptions) => {
   return query;
 };
 
+export interface CreateProfileDto {
+  id: string;
+  email: string;
+  display_name: string;
+  full_name: string;
+}
+
 export const supabaseService = {
+  // ==========================
+  // AUTH
+  // ==========================
+
   getSession: () => supabase.auth.getSession(),
 
-  onAuthStateChange: (callback: (event: AuthChangeEvent, session: Session | null) => void) =>
-    supabase.auth.onAuthStateChange(callback),
+  onAuthStateChange: (
+    callback: (
+      event: AuthChangeEvent,
+      session: Session | null
+    ) => void
+  ) => supabase.auth.onAuthStateChange(callback),
 
-  signIn: (email: string, password: string) =>
+  login: (email: string, password: string) =>
     supabase.auth.signInWithPassword({
       email,
       password,
     }),
 
-  signUp: (name: string, email: string, password: string) =>
+  register: (
+    name: string,
+    email: string,
+    password: string
+  ) =>
     supabase.auth.signUp({
       email,
       password,
@@ -69,6 +92,8 @@ export const supabaseService = {
       },
     }),
 
+  logout: () => supabase.auth.signOut(),
+
   signInWithGoogle: () =>
     supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -77,14 +102,48 @@ export const supabaseService = {
       },
     }),
 
-  signOut: () => supabase.auth.signOut(),
+  // ==========================
+  // PROFILES
+  // ==========================
 
-  getProfile: (userId: string) =>
-    supabase.from('profiles').select('*').eq('id', userId).single(),
+  createProfile: (data: CreateProfileDto) =>
+    supabase.from('profiles').insert({
+      id: data.id,
+      email: data.email,
+      display_name: data.display_name,
+      full_name: data.full_name,
+      profile_pic: null,
+      phone: null,
+      plan: 'free',
+    }),
 
-  queryTable: <T = unknown>(table: string, options: QueryOptions = {}) =>
-    buildQuery<T>(table, options),
+  getProfileById: (userId: string) =>
+    supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single(),
 
-  searchTable: <T = unknown>(table: string, options: QueryOptions = {}) =>
-    buildQuery<T>(table, options),
+  updateProfile: (
+    userId: string,
+    data: Record<string, unknown>
+  ) =>
+    supabase
+      .from('profiles')
+      .update(data)
+      .eq('id', userId),
+
+  // ==========================
+  // GENERIC QUERIES
+  // ==========================
+
+  queryTable: <T = unknown>(
+    table: string,
+    options: QueryOptions = {}
+  ) => buildQuery<T>(table, options),
+
+  searchTable: <T = unknown>(
+    table: string,
+    options: QueryOptions = {}
+  ) => buildQuery<T>(table, options),
 };

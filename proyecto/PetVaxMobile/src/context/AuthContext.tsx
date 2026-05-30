@@ -1,215 +1,270 @@
-// src/context/AuthContext.tsx
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  ReactNode,
+} from 'react';
+
+import { Session } from '@supabase/supabase-js';
 import { supabaseService } from '../services/supabase';
 
-// Interface limpia y estricta conectada con tu base de datos
-interface User {
-  id: string;        // ID único del auth.users de Supabase
-  name: string;
-  displayName: string;
+export interface Profile {
+  id: string;
+
   email: string;
-  photoURL?: string;  // Imagen del avatar del Header
+
+  display_name: string;
+
+  full_name: string;
+
+  profile_pic: string | null;
+
+  phone: string | null;
+
   plan: 'free' | 'premium';
-  isGuest?: boolean;
+
+  created_at: string;
+
+  updated_at: string;
 }
 
 interface AuthContextType {
+  user: Profile | null;
+
+  session: Session | null;
+
+  loading: boolean;
+
   isAuthenticated: boolean;
-  user: User | null;
-  loading: boolean;   // Controla el estado mientras Supabase recupera la sesión activa
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
+
+  login: (
+    email: string,
+    password: string
+  ) => Promise<void>;
+
+  register: (
+    name: string,
+    email: string,
+    password: string
+  ) => Promise<void>;
+
   logout: () => Promise<void>;
+
+  refreshProfile: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<
+  AuthContextType | undefined
+>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+interface Props {
+  children: ReactNode;
+}
 
-  useEffect(() => {
-    //console.log('AuthProvider state', { user, loading, isAuthenticated: user !== null });
-  }, [user, loading]);
+export const AuthProvider = ({
+  children,
+}: Props) => {
+  const [user, setUser] =
+    useState<Profile | null>(null);
 
-  // Sincroniza la tabla 'profiles' de Supabase con el estado de React
-  const fetchAndSyncProfile = async (supabaseUser: any) => {
-    try {
-      const { data: profile, error } = await supabaseService.getProfile(supabaseUser.id);
+  const [session, setSession] =
+    useState<Session | null>(null);
 
-      const safeName = profile?.full_name || profile?.display_name || supabaseUser.email || 'Usuario PetVax';
-      const safeDisplayName = profile?.display_name || safeName;
+  const [loading, setLoading] =
+    useState(true);
 
-      setUser({
-        id: supabaseUser.id,
-        email: supabaseUser.email || '',
-        name: safeName,
-        displayName: safeDisplayName,
-        photoURL: profile?.profile_pic ?? undefined,
-        plan: profile?.plan || 'free'
-      });
+  const loadProfile = useCallback(
+    async (userId: string) => {
+      const { data, error } =
+        await supabaseService.getProfileById(
+          userId
+        );
 
-      if (error && !profile) {
-        console.error('Supabase profile fetch error:', error);
+      if (error) {
+        throw error;
       }
-    } catch (err) {
-      console.error('Error al sincronizar perfil extendido:', err);
-      setUser({
-        id: supabaseUser.id,
-        email: supabaseUser.email || '',
-        name: supabaseUser.email || 'Usuario PetVax',
-        displayName: supabaseUser.email || 'Usuario PetVax',
-        plan: 'free'
-      });
-    } finally {
-      setLoading(false);
+
+      setUser(data as Profile);
+      console.log('Perfil cargado:', data);
+    },
+    []
+  );
+
+  const login = async (
+    email: string,
+    password: string
+  ) => {
+    const { data, error } =
+      await supabaseService.login(
+        email,
+        password
+      );
+
+    if (error) {
+      throw error;
     }
+
+    if (!data.user) {
+      throw new Error(
+        'No se pudo obtener el usuario.'
+      );
+    }
+
+    await loadProfile(data.user.id);
   };
 
-  // Listener global: Atiende los ciclos de vida de autenticación de Supabase
+  const register = async (
+    name: string,
+    email: string,
+    password: string
+  ) => {
+    const { data, error } =
+      await supabaseService.register(
+        name,
+        email,
+        password
+      );
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data.user) {
+      throw new Error(
+        'No se pudo crear el usuario.'
+      );
+    }
+
+    const { error: profileError } =
+      await supabaseService.createProfile({
+        id: data.user.id,
+        email: data.user.email ?? email,
+        display_name: name,
+        full_name: name,
+      });
+
+    if (profileError) {
+      throw profileError;
+    }
+
+    await loadProfile(data.user.id);
+  };
+
+  const logout = async () => {
+    const { error } =
+      await supabaseService.logout();
+
+    if (error) {
+      throw error;
+    }
+
+    setUser(null);
+    setSession(null);
+  };
+
+  const refreshProfile =
+    useCallback(async () => {
+      const {
+        data: { session },
+      } = await supabaseService.getSession();
+
+      const userId = session?.user.id;
+
+      if (!userId) return;
+
+      await loadProfile(userId);
+    }, [loadProfile]);
+
   useEffect(() => {
-    const initializeAuth = async () => {
-      //console.log('AuthProvider: inicializando conexión Supabase');
+    let subscription:
+      | { unsubscribe: () => void }
+      | undefined;
+
+    const initialize = async () => {
       try {
-        const { data, error } = await supabaseService.getSession();
-        //console.log('AuthProvider: getSession response', { session: data?.session, error });
+        const {
+          data: { session },
+        } = await supabaseService.getSession();
 
-        if (error) {
-          console.error('Error obteniendo sesión de Supabase:', error);
-          setUser(null);
-          return;
-        }
+        setSession(session);
 
-        if (data.session?.user) {
-          await fetchAndSyncProfile(data.session.user);
-        } else {
-          setUser(null);
+        if (session?.user) {
+          await loadProfile(
+            session.user.id
+          );
         }
-      } catch (err) {
-        console.error('Error inicializando sesión de Supabase:', err);
-        setUser(null);
+      } catch (error) {
+        console.error(error);
       } finally {
         setLoading(false);
       }
+
+      const listener =
+        supabaseService.onAuthStateChange(
+          async (_event: any, session: any) => {
+            setSession(session);
+
+            if (session?.user) {
+              try {
+                await loadProfile(
+                  session.user.id
+                );
+              } catch (error) {
+                console.error(error);
+              }
+            } else {
+              setUser(null);
+            }
+          }
+        );
+
+      subscription =
+        listener.data.subscription;
     };
 
-    initializeAuth();
+    initialize();
 
-    const authStateChange = supabaseService.onAuthStateChange(async (event, session) => {
-      try {
-        if (session?.user) {
-          await fetchAndSyncProfile(session.user);
-        } else {
-          setUser(null);
-          setLoading(false);
-        }
-      } catch (err) {
-        console.error('Error en callback onAuthStateChange:', err);
-        setUser(null);
-        setLoading(false);
-      }
-    });
-
-    const subscription = authStateChange?.data?.subscription;
     return () => {
-      if (subscription?.unsubscribe) {
-        subscription.unsubscribe();
-      }
+      subscription?.unsubscribe();
     };
-  }, []);
+  }, [loadProfile]);
 
-  // LOGIN: Tradicional por Correo y Contraseña
-  const login = async (email: string, password: string) => {
-    setLoading(true);
-    try {
-      //console.log('AuthProvider: signInWithPassword', { email });
-      const { data, error } = await supabaseService.signIn(email, password);
-      //console.log('AuthProvider: signInWithPassword response', { data, error });
+  const value = useMemo(
+    () => ({
+      user,
+      session,
+      loading,
 
-      if (error) {
-        throw error;
-      }
+      login,
+      register,
+      logout,
 
-      if (data.session?.user) {
-        const supabaseUser = data.session.user;
-        setUser({
-          id: supabaseUser.id,
-          email: supabaseUser.email || '',
-          name: supabaseUser.email || 'Usuario PetVax',
-          displayName: supabaseUser.email || 'Usuario PetVax',
-          plan: 'free',
-        });
-        await fetchAndSyncProfile(supabaseUser);
-      } else {
-        console.warn('AuthProvider: signInWithPassword no devolvió sesión ni error');
-        setLoading(false);
-      }
-    } catch (err) {
-      setLoading(false);
-      throw err;
-    }
-  };
+      refreshProfile,
 
-  // REGISTRO: Crea la cuenta e inyecta la metadata que el Trigger SQL usará para el perfil
-  const register = async (name: string, email: string, password: string) => {
-    setLoading(true);
-    try {
-      const { error } = await supabaseService.signUp(name, email, password);
-
-      if (error) {
-        throw error;
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // GOOGLE AUTH: OAuth Directo sin pasos intermedios
-  const loginWithGoogle = async () => {
-    setLoading(true);
-    try {
-      const { error } = await supabaseService.signInWithGoogle();
-      if (error) {
-        throw error;
-      }
-    } catch (err) {
-      setLoading(false);
-      throw err;
-    }
-  };
-
-  // LOGOUT: Limpieza de cookies de sesión en Supabase
-  const logout = async () => {
-    setUser(null);
-    await supabaseService.signOut();
-  };
+      isAuthenticated: !!user,
+    }),
+    [user, session, loading]
+  );
 
   return (
-    <AuthContext.Provider
-      value={{
-        isAuthenticated: user !== null,
-        user,
-        loading,
-        login,
-        register,
-        loginWithGoogle,
-        logout,
-      }}
-    >
-      {loading ? (
-        <div className="min-h-screen flex items-center justify-center bg-[#f9f9ff] text-[#374151]">
-          <span className="text-sm font-medium">Cargando sesión...</span>
-        </div>
-      ) : (
-        children
-      )}
+    <AuthContext.Provider value={value}>
+      {children}
     </AuthContext.Provider>
   );
 };
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth debe usarse dentro de un AuthProvider');
+  const context =
+    useContext(AuthContext);
+
+  if (!context) {
+    throw new Error(
+      'useAuth must be used inside AuthProvider'
+    );
+  }
+
   return context;
 };

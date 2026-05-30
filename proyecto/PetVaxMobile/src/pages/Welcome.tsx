@@ -8,12 +8,13 @@ import {
 import { arrowForward, paw, shieldCheckmark } from 'ionicons/icons';
 import { Input } from '../components/Input';
 import { useAuth } from '../context/AuthContext';
+import { supabaseService } from '../services/supabase';
 import GoogleImage from '../assets/GoogleLogo.webp';
 import BgPattern from '../assets/bg-pattern.png';
 
 const Welcome: React.FC = () => {
   const history = useHistory();
-  const { login, register, isAuthenticated, loading, loginWithGoogle } = useAuth();
+  const { login, user } = useAuth();
   const [mode, setMode] = useState<'login' | 'register' | 'confirm-email'>('login');
   const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
@@ -21,25 +22,29 @@ const Welcome: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [message, setMessage] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!loading && isAuthenticated) {
+    if (user) {
       history.replace('/dashboard');
     }
-  }, [loading, isAuthenticated, history]);
+  }, [user, history]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setMessage('');
+    setLoading(true);
 
     if (!email.trim() || !password.trim() || (mode === 'register' && !name.trim())) {
       setError('Por favor completa todos los campos.');
+      setLoading(false);
       return;
     }
 
     if (mode === 'register' && password !== confirmPassword) {
       setError('Las contraseñas no coinciden.');
+      setLoading(false);
       return;
     }
 
@@ -47,21 +52,45 @@ const Welcome: React.FC = () => {
       if (mode === 'login') {
         await login(email.trim(), password.trim());
         history.replace('/dashboard');
-      } else if (mode === 'register') {
-        await register(name.trim(), email.trim(), password.trim());
+      } else {
+        const { error } = await supabaseService.register(name.trim(), email.trim(), password.trim());
+        if (error) {
+          throw error;
+        }
         setMode('confirm-email');
         setMessage(`Hemos enviado un correo a ${email.trim()}. Confirma tu cuenta antes de iniciar sesión.`);
+        setName('');
+        setPassword('');
+        setConfirmPassword('');
       }
     } catch (err: any) {
       const fallbackMessage =
         err?.message ||
         err?.error_description ||
         err?.status === 400
-          ? 'Credenciales inválidas o usuario no confirmado. Revisa tu correo y contraseña.'
+          ? 'Credenciales inválidas o no se pudo crear la cuenta. Revisa los datos e intenta de nuevo.'
           : 'Ocurrió un error en la autenticación.';
 
       setError(fallbackMessage);
-      console.error('Login error:', err);
+      console.error('Auth error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      const { error } = await supabaseService.signInWithGoogle();
+      if (error) {
+        throw error;
+      }
+    } catch (err: any) {
+      setError(err?.message || 'No se pudo iniciar sesión con Google.');
+      console.error('Google auth error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -253,10 +282,10 @@ const Welcome: React.FC = () => {
     </span>
   </div>
 
-  {/* BOTÓN CON CONEXIÓN REAL A GOOGLE AUTH DESDE TU CONTEXTO */}
+  {/* BOTÓN CON CONEXIÓN REAL A GOOGLE AUTH DESDE TU SERVICIO */}
   <button
     type="button"
-    onClick={loginWithGoogle}
+    onClick={handleGoogleSignIn}
     className="w-full h-12 border border-gray-200 bg-white/70 hover:bg-white text-[#141b2b] font-semibold text-sm rounded-lg flex items-center justify-center gap-3 transition-colors active:scale-[0.98]"
   >
     <img 
