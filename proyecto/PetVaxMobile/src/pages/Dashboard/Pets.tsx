@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useHistory, useLocation } from 'react-router-dom';
 import { Pencil, Plus } from 'lucide-react';
 
 import { Card } from '../../components/Card';
@@ -7,6 +8,7 @@ import { PetVaxColors } from '../../colors';
 import { useAuth } from '../../context/AuthContext';
 import { ProfileImagePicker } from '../../components/ProfileImagePicker';
 import { supabaseService } from '../../services/supabase';
+import { haptics } from '../../services/haptics';
 import { supabase } from '../../supabaseClient';
 
 import { PetTypeSelector } from '../../components/PetTypeSelector';
@@ -36,6 +38,8 @@ interface Pet {
 }
 
 export const Pets: React.FC = () => {
+  const history = useHistory();
+  const location = useLocation();
   const { user } = useAuth();
 
   const { pets, loading: petsLoading, refreshPets } = usePets();
@@ -69,12 +73,14 @@ export const Pets: React.FC = () => {
     setBathDate('');
   };
 
-  const openCreatePet = () => {
-    // Validación de plan basada en los datos en tiempo real de tu AuthContext
+  const openCreatePet = async () => {
     if (user?.plan === 'free' && pets.length >= 1) {
-      alert('Tu plan free solo permite 1 mascota registrada.');
+      await haptics.long();
+
+      history.push('/dashboard#premium-cta');
       return;
     }
+
     setSelectedPet(null);
     resetForm();
     setModalOpen(true);

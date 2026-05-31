@@ -1,4 +1,5 @@
 import React from 'react';
+import { useHistory, useLocation } from 'react-router-dom';
 
 import { Card } from '../../components/Card';
 import { Badge } from '../../components/Badge';
@@ -11,6 +12,8 @@ import BgPattern from '../../assets/bg-pattern.png';
 import { PawPrint, Sparkles, Bell } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
+  const history = useHistory();
+  const location = useLocation();
   const { user } = useAuth();
 
   const displayName =
@@ -51,55 +54,55 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-{/* FEATURES PREMIUM */}
-<div className="grid gap-3 mt-2">
+      {/* FEATURES PREMIUM */}
+      <div className="grid gap-3 mt-2">
 
-  <Card>
-    <div className="flex items-start gap-3">
-      <div className="p-2 rounded-lg bg-emerald-50 text-[#0D9488]">
-        <PawPrint size={18} />
+        <Card>
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-lg bg-emerald-50 text-[#0D9488]">
+              <PawPrint size={18} />
+            </div>
+
+            <div>
+              <h3 className="text-sm font-semibold">Mascotas ilimitadas</h3>
+              <p className="text-xs text-gray-600">
+                Agrega todas tus mascotas sin restricciones en el plan premium. (1 mascota en plan free)
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        <Card>
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-lg bg-emerald-50 text-[#0D9488]">
+              <Sparkles size={18} />
+            </div>
+
+            <div>
+              <h3 className="text-sm font-semibold">Consejos personalizados</h3>
+              <p className="text-xs text-gray-600">
+                Recomendaciones según la historia clínica y raza de tu mascota.
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        <Card>
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-lg bg-emerald-50 text-[#0D9488]">
+              <Bell size={18} />
+            </div>
+
+            <div>
+              <h3 className="text-sm font-semibold">Alertas inteligentes</h3>
+              <p className="text-xs text-gray-600">
+                Notificaciones adaptadas al estado de salud de cada mascota.
+              </p>
+            </div>
+          </div>
+        </Card>
+
       </div>
-
-      <div>
-        <h3 className="text-sm font-semibold">Mascotas ilimitadas</h3>
-        <p className="text-xs text-gray-600">
-          Agrega todas tus mascotas sin restricciones en el plan premium.
-        </p>
-      </div>
-    </div>
-  </Card>
-
-  <Card>
-    <div className="flex items-start gap-3">
-      <div className="p-2 rounded-lg bg-emerald-50 text-[#0D9488]">
-        <Sparkles size={18} />
-      </div>
-
-      <div>
-        <h3 className="text-sm font-semibold">Consejos personalizados</h3>
-        <p className="text-xs text-gray-600">
-          Recomendaciones según la historia clínica y raza de tu mascota.
-        </p>
-      </div>
-    </div>
-  </Card>
-
-  <Card>
-    <div className="flex items-start gap-3">
-      <div className="p-2 rounded-lg bg-emerald-50 text-[#0D9488]">
-        <Bell size={18} />
-      </div>
-
-      <div>
-        <h3 className="text-sm font-semibold">Alertas inteligentes</h3>
-        <p className="text-xs text-gray-600">
-          Notificaciones adaptadas al estado de salud de cada mascota.
-        </p>
-      </div>
-    </div>
-  </Card>
-
-</div>
 
       {/* PREMIUM CTA */}
       <div
@@ -123,19 +126,20 @@ export const Dashboard: React.FC = () => {
         </div>
 
         <button
-  className="bg-white rounded-full w-full py-3 text-sm font-medium text-green-700 border border-green-700 flex items-center justify-center gap-2"
-  onClick={() => {
-    const phone = '573197293775';
-    const message = encodeURIComponent(
-      'Hola, quiero hacerme Premium en PetVax'
-    );
+          id="premium-cta"
+          className="bg-white rounded-full w-full py-3 text-sm font-medium text-green-700 border border-green-700 flex items-center justify-center gap-2"
+          onClick={() => {
+            const phone = '573197293775';
+            const message = encodeURIComponent(
+              'Hola, quiero hacerme Premium en PetVax'
+            );
 
-    window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
-  }}
->
-  Desbloquea Premium
-  <ArrowRight size={16} />
-</button>
+            window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+          }}
+        >
+          Desbloquea Premium
+          <ArrowRight size={16} />
+        </button>
       </div>
 
     </div>
