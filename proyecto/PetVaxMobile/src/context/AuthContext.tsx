@@ -13,31 +13,27 @@ import { supabaseService } from '../services/supabase';
 
 export interface Profile {
   id: string;
-
   email: string;
-
   display_name: string;
-
   full_name: string;
-
   profile_pic: string | null;
-
   phone: string | null;
-
   plan: 'free' | 'premium';
-
   created_at: string;
-
   updated_at: string;
+}
+
+interface UpdateProfileDto {
+  full_name?: string;
+  display_name?: string;
+  phone?: string | null;
+  profile_pic?: string | null;
 }
 
 interface AuthContextType {
   user: Profile | null;
-
   session: Session | null;
-
   loading: boolean;
-
   isAuthenticated: boolean;
 
   login: (
@@ -54,6 +50,14 @@ interface AuthContextType {
   logout: () => Promise<void>;
 
   refreshProfile: () => Promise<void>;
+
+  updateProfile: (
+    data: UpdateProfileDto
+  ) => Promise<void>;
+
+  uploadProfileImage: (
+    file: File,
+  ) => Promise<string>;
 }
 
 const AuthContext = createContext<
@@ -88,7 +92,6 @@ export const AuthProvider = ({
       }
 
       setUser(data as Profile);
-      console.log('Perfil cargado:', data);
     },
     []
   );
@@ -154,15 +157,12 @@ export const AuthProvider = ({
   };
 
   const logout = async () => {
-    const { error } =
-      await supabaseService.logout();
-
-    if (error) {
-      throw error;
-    }
+    await supabaseService.logout();
 
     setUser(null);
     setSession(null);
+
+    console.log('logout completo');
   };
 
   const refreshProfile =
@@ -177,6 +177,51 @@ export const AuthProvider = ({
 
       await loadProfile(userId);
     }, [loadProfile]);
+
+  const updateProfile = async (
+    data: UpdateProfileDto
+  ) => {
+    if (!user) {
+      throw new Error(
+        'Usuario no autenticado'
+      );
+    }
+
+    const { error } =
+      await supabaseService.updateProfile(
+        user.id,
+        data as any
+      );
+
+    if (error) {
+      throw error;
+    }
+
+    await refreshProfile();
+  };
+
+  const uploadProfileImage = async (
+    file: File,
+  ) => {
+    if (!user) {
+      throw new Error(
+        'Usuario no autenticado'
+      );
+    }
+
+    const imageUrl =
+      await supabaseService.uploadProfileImage(
+        user.id,
+        file,
+        'profiles'
+      );
+
+    await updateProfile({
+      profile_pic: imageUrl,
+    });
+
+    return imageUrl;
+  };
 
   useEffect(() => {
     let subscription:
@@ -204,7 +249,10 @@ export const AuthProvider = ({
 
       const listener =
         supabaseService.onAuthStateChange(
-          async (_event: any, session: any) => {
+          async (
+            _event,
+            session
+          ) => {
             setSession(session);
 
             if (session?.user) {
@@ -243,10 +291,16 @@ export const AuthProvider = ({
       logout,
 
       refreshProfile,
+      updateProfile,
+      uploadProfileImage,
 
       isAuthenticated: !!user,
     }),
-    [user, session, loading]
+    [
+      user,
+      session,
+      loading,
+    ]
   );
 
   return (

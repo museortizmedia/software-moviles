@@ -12,11 +12,12 @@ export const TopBar: React.FC = () => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const handleLogout = async () => {
-    setShowProfileMenu(false);
-
-    await logout();
-
-    history.replace('/login');
+    try {
+      await logout();
+      //setShowProfileMenu(false);
+    } catch (error) {
+      console.error('Error cerrando sesión', error);
+    }
   };
 
   return (

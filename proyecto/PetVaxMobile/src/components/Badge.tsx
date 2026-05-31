@@ -1,4 +1,3 @@
-// Badge.tsx
 import React from 'react';
 import { PetVaxColors } from '../colors';
 
@@ -9,8 +8,14 @@ interface BadgeProps {
   children: React.ReactNode;
 }
 
-export const Badge: React.FC<BadgeProps> = ({ status = 'up-to-date', children }) => {
-  const styles: Record<BadgeStatus, { backgroundColor: string; color: string }> = {
+export const Badge: React.FC<BadgeProps> = ({
+  status = 'up-to-date',
+  children,
+}) => {
+  const styles: Record<
+    BadgeStatus,
+    { backgroundColor: string; color: string }
+  > = {
     'up-to-date': {
       backgroundColor: PetVaxColors.onPrimaryContainer,
       color: PetVaxColors.primary,
@@ -22,13 +27,13 @@ export const Badge: React.FC<BadgeProps> = ({ status = 'up-to-date', children })
     'error': {
       backgroundColor: PetVaxColors.errorContainer,
       color: PetVaxColors.error,
-    }
+    },
   };
 
-  const currentStyle = styles[status] || styles['up-to-date'];
+  const currentStyle = styles[status];
 
   return (
-    <span 
+    <span
       className="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full tracking-wide"
       style={currentStyle}
     >

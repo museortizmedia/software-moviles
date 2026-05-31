@@ -103,6 +103,22 @@ export const supabaseService = {
     }),
 
   // ==========================
+  // CRUD
+  // ==========================
+  create: <T>(table: string, data: T) =>
+    supabase.from(table).insert(data as any),
+
+  update: <T>(
+    table: string,
+    id: string,
+    data: Partial<T>
+  ) =>
+    supabase.from(table).update(data as any).eq('id', id),
+
+  remove: (table: string, id: string) =>
+    supabase.from(table).delete().eq('id', id),
+
+  // ==========================
   // PROFILES
   // ==========================
 
@@ -146,4 +162,41 @@ export const supabaseService = {
     table: string,
     options: QueryOptions = {}
   ) => buildQuery<T>(table, options),
+
+  // ==========================
+  // STORAGE
+  // ==========================
+  uploadProfileImage: async (userId: string, file: File, storageBucket: string) => {
+    const extension = file.name.split('.').pop();
+    const fileName = `${userId}/pets/${crypto.randomUUID()}.${extension}`;
+
+    const { error } = await supabase.storage
+      .from(storageBucket)
+      .upload(fileName, file, {
+        upsert: true,
+        cacheControl: '3600',
+      });
+
+    if (error) throw error;
+
+    const { data } = supabase.storage
+      .from(storageBucket)
+      .getPublicUrl(fileName);
+
+    return data.publicUrl;
+  },
+
+  updatePetReminderSettings: (
+  petId: string,
+  data: {
+    vaccination_enabled?: boolean;
+    deworming_enabled?: boolean;
+    bath_enabled?: boolean;
+  }
+) =>
+  supabase
+    .from('pets')
+    .update(data)
+    .eq('id', petId),
+
 };
