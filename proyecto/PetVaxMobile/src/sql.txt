@@ -106,3 +106,24 @@ $$ language plpgsql security definer;
 
 
 
+create table public.push_tokens (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references public.profiles(id) on delete cascade,
+  token text not null,
+  platform text check (platform in ('ios', 'android', 'web')),
+  created_at timestamp with time zone default now()
+);
+
+
+supabase functions deploy daily-reminders
+
+npx cap sync
+
+
+create table user_devices (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users(id) on delete cascade,
+  fcm_token text not null,
+  platform text,
+  created_at timestamp default now()
+);

@@ -70,18 +70,24 @@ const updatePetReminder = async (
   field: 'vaccination_enabled' | 'deworming_enabled' | 'bath_enabled',
   value: boolean
 ) => {
-  const { error } = await supabase
-    .from('pets')
-    .update({ [field]: value })
-    .eq('id', petId);
-
-  if (error) throw error;
-
+  // 1. Optimistic update (UI inmediata)
   setPets(prev =>
     prev.map(p =>
       p.id === petId ? { ...p, [field]: value } : p
     )
   );
+
+  // 2. Persistencia en Supabase
+  const { error } = await supabase
+    .from('pets')
+    .update({ [field]: value })
+    .eq('id', petId);
+
+  if (error) {
+    // rollback si falla
+    refreshPets();
+    throw error;
+  }
 };
 
   return (

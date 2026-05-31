@@ -74,19 +74,6 @@ export const Reminders: React.FC = () => {
 
   const bathState = getBathState(bathDays);
 
-  // =========================
-  // UPDATE REMINDER SAFE
-  // =========================
-  const handleToggle = async (
-    field:
-      | 'vaccination_enabled'
-      | 'deworming_enabled'
-      | 'bath_enabled',
-    value: boolean
-  ) => {
-    await updatePetReminder(pet.id, field, value);
-  };
-
   return (
     <div className="space-y-4">
 
@@ -132,11 +119,11 @@ export const Reminders: React.FC = () => {
         nextDate={nextVaccination?.toDateString()}
         rightAction={
           <Toggle
-            value={pet.vaccination_enabled}
-            onChange={(v) =>
-              handleToggle('vaccination_enabled', v)
-            }
-          />
+  value={pet.vaccination_enabled}
+  onChange={(v) =>
+    updatePetReminder(pet.id, 'vaccination_enabled', v)
+  }
+/>
         }
       >
         <Badge
@@ -161,11 +148,11 @@ export const Reminders: React.FC = () => {
         nextDate={nextDeworming?.toDateString()}
         rightAction={
           <Toggle
-            value={pet.deworming_enabled}
-            onChange={(v) =>
-              handleToggle('deworming_enabled', v)
-            }
-          />
+  value={pet.deworming_enabled}
+  onChange={(v) =>
+    updatePetReminder(pet.id, 'deworming_enabled', v)
+  }
+/>
         }
       >
         <ProgressBar
@@ -184,11 +171,11 @@ export const Reminders: React.FC = () => {
         nextDate={nextBath?.toDateString()}
         rightAction={
           <Toggle
-            value={pet.bath_enabled}
-            onChange={(v) =>
-              handleToggle('bath_enabled', v)
-            }
-          />
+  value={pet.bath_enabled}
+  onChange={(v) =>
+    updatePetReminder(pet.id, 'bath_enabled', v)
+  }
+/>
         }
         >
         <Badge status={bathState.status}>

@@ -186,17 +186,24 @@ export const supabaseService = {
     return data.publicUrl;
   },
 
-  updatePetReminderSettings: (
-  petId: string,
-  data: {
-    vaccination_enabled?: boolean;
-    deworming_enabled?: boolean;
-    bath_enabled?: boolean;
-  }
-) =>
-  supabase
-    .from('pets')
-    .update(data)
-    .eq('id', petId),
+  updatePetReminderSettings: async (
+    petId: string,
+    data: {
+      vaccination_enabled?: boolean;
+      deworming_enabled?: boolean;
+      bath_enabled?: boolean;
+    }
+  ) => {
+    const { data: updated, error } = await supabase
+      .from('pets')
+      .update(data)
+      .eq('id', petId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return updated;
+  },
 
 };

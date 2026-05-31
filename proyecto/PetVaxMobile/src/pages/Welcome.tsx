@@ -11,6 +11,8 @@ import { useAuth } from '../context/AuthContext';
 import { supabaseService } from '../services/supabase';
 import GoogleImage from '../assets/GoogleLogo.webp';
 import BgPattern from '../assets/bg-pattern.png';
+import { initPush } from '../services/push';
+import { supabase } from '../supabaseClient';
 
 const Welcome: React.FC = () => {
   const history = useHistory();
@@ -24,11 +26,21 @@ const Welcome: React.FC = () => {
   const [message, setMessage] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
 
+
   useEffect(() => {
     if (user) {
       history.replace('/dashboard');
     }
   }, [user, history]);
+
+    const registerDeviceAfterLogin = async () => {
+    const { data } = await supabase.auth.getSession();
+    const sessionUser = data.session?.user;
+
+    if (sessionUser?.id) {
+      await initPush(sessionUser.id);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,6 +63,7 @@ const Welcome: React.FC = () => {
     try {
       if (mode === 'login') {
         await login(email.trim(), password.trim());
+        await registerDeviceAfterLogin();
         history.replace('/dashboard');
       } else {
         const { error } = await supabaseService.register(name.trim(), email.trim(), password.trim());
@@ -66,8 +79,8 @@ const Welcome: React.FC = () => {
     } catch (err: any) {
       const fallbackMessage =
         err?.message ||
-        err?.error_description ||
-        err?.status === 400
+          err?.error_description ||
+          err?.status === 400
           ? 'Credenciales inválidas o no se pudo crear la cuenta. Revisa los datos e intenta de nuevo.'
           : 'Ocurrió un error en la autenticación.';
 
@@ -96,7 +109,7 @@ const Welcome: React.FC = () => {
 
   return (
     <IonPage style={{ display: 'flex', width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
-      
+
       {/* 1. INYECCIÓN CSS CRÍTICA DE ALTA PRIORIDAD */}
       <style>{`
         ion-content {
@@ -112,9 +125,9 @@ const Welcome: React.FC = () => {
           background: transparent !important;
         }
       `}</style>
-      
+
       {/* 2. IMAGEN DE FONDO ABSOLUTA REAL (Se traslada detrás de todo el viewport) */}
-      <div 
+      <div
         style={{
           position: 'absolute',
           top: 0,
@@ -125,9 +138,9 @@ const Welcome: React.FC = () => {
           pointerEvents: 'none'
         }}
       >
-        <img 
-          alt="Background pattern" 
-          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }} 
+        <img
+          alt="Background pattern"
+          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
           src={BgPattern}
         />
         {/* Capa de tinte sutil opcional para controlar contraste si la imagen es muy brillante */}
@@ -136,24 +149,24 @@ const Welcome: React.FC = () => {
 
       {/* 3. CONTENEDOR DE CONTENIDO DE IONIC */}
       <IonContent scrollY={true}>
-        
+
         {/* 4. CONTENEDOR INTERNO */}
-        <div 
+        <div
           className="w-full max-w-md mx-auto flex flex-col justify-between px-6 py-8"
-          style={{ 
-            position: 'relative', 
-            zIndex: 10, 
+          style={{
+            position: 'relative',
+            zIndex: 10,
             minHeight: '100vh',
             boxSizing: 'border-box'
           }}
         >
-          
+
           {/* Bloque Superior (Header + Tarjeta) */}
           <div className="flex-grow flex flex-col justify-center">
-            
+
             {/* Header */}
             <header className="flex flex-col items-center justify-center mb-6">
-              <div 
+              <div
                 className="w-20 h-20 rounded-3xl flex items-center justify-center mb-4 shadow-md backdrop-blur-xs"
                 style={{ backgroundColor: 'rgba(0, 131, 120, 0.12)', color: '#00685f' }}
               >
@@ -173,16 +186,16 @@ const Welcome: React.FC = () => {
                     {mode === 'login'
                       ? 'Iniciar sesión'
                       : mode === 'register'
-                      ? 'Crear cuenta'
-                      : 'Confirma tu correo'}
+                        ? 'Crear cuenta'
+                        : 'Confirma tu correo'}
                   </h2>
                 </div>
                 <p className="text-sm text-[#3d4947]">
                   {mode === 'login'
                     ? 'Usa tu correo y contraseña para ingresar a tu panel.'
                     : mode === 'register'
-                    ? 'Regístrate para comenzar a administrar los datos de tus mascotas.'
-                    : 'Revisa tu bandeja de entrada y confirma el correo antes de iniciar sesión.'}
+                      ? 'Regístrate para comenzar a administrar los datos de tus mascotas.'
+                      : 'Revisa tu bandeja de entrada y confirma el correo antes de iniciar sesión.'}
                 </p>
               </div>
 
@@ -269,33 +282,33 @@ const Welcome: React.FC = () => {
               )}
 
               <div className="mt-4 flex flex-col gap-4">
-  
-  {/* DIVISOR VISUAL CON TEXTO EN EL MEDIO */}
-  <div className="relative flex py-2 items-center justify-center">
-    {/* La línea gris de fondo */}
-    <div className="absolute inset-0 flex items-center">
-      <div className="w-full border-t border-gray-200"></div>
-    </div>
-    {/* El texto contenedor con el mismo fondo esmerilado de tu tarjeta */}
-    <span className="relative flex-shrink-0 px-3 text-xs font-semibold text-[#3d4947] bg-white/10 backdrop-blur-md rounded-full">
-      o conéctate con
-    </span>
-  </div>
 
-  {/* BOTÓN CON CONEXIÓN REAL A GOOGLE AUTH DESDE TU SERVICIO */}
-  <button
-    type="button"
-    onClick={handleGoogleSignIn}
-    className="w-full h-12 border border-gray-200 bg-white/70 hover:bg-white text-[#141b2b] font-semibold text-sm rounded-lg flex items-center justify-center gap-3 transition-colors active:scale-[0.98]"
-  >
-    <img 
-      src={GoogleImage} 
-      alt="Google Logo" 
-      className="w-5 h-5 object-contain" 
-    />
-    Continuar con Google
-  </button>
-</div>
+                {/* DIVISOR VISUAL CON TEXTO EN EL MEDIO */}
+                <div className="relative flex py-2 items-center justify-center">
+                  {/* La línea gris de fondo */}
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-200"></div>
+                  </div>
+                  {/* El texto contenedor con el mismo fondo esmerilado de tu tarjeta */}
+                  <span className="relative flex-shrink-0 px-3 text-xs font-semibold text-[#3d4947] bg-white/10 backdrop-blur-md rounded-full">
+                    o conéctate con
+                  </span>
+                </div>
+
+                {/* BOTÓN CON CONEXIÓN REAL A GOOGLE AUTH DESDE TU SERVICIO */}
+                <button
+                  type="button"
+                  onClick={handleGoogleSignIn}
+                  className="w-full h-12 border border-gray-200 bg-white/70 hover:bg-white text-[#141b2b] font-semibold text-sm rounded-lg flex items-center justify-center gap-3 transition-colors active:scale-[0.98]"
+                >
+                  <img
+                    src={GoogleImage}
+                    alt="Google Logo"
+                    className="w-5 h-5 object-contain"
+                  />
+                  Continuar con Google
+                </button>
+              </div>
             </div>
 
             {/* Alternar Modos */}
